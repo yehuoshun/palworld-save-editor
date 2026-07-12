@@ -1,0 +1,15 @@
+[project]
+name = "palworld-save-editor"
+version = "0.1.0"
+description = "Palworld save file editor"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "palworld-save-tools @ git+https://github.com/oMaN-Rod/palworld-save-tools.git@main",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0.0",
+]
