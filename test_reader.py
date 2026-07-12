@@ -7,7 +7,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from backend.save_reader import get_save_info, load_sav
+from backend.parsers import extract_save_info
+from backend.save_reader import load_sav
 
 
 def main():
@@ -19,14 +20,13 @@ def main():
     print(f"正在加载: {sav_path}")
 
     data = load_sav(sav_path)
-    info = get_save_info(data)
+    info = extract_save_info(data)
 
     print(f"\n=== 存档信息 ===")
     print(f"世界名称: {info['world_name']}")
     print(f"玩家数量: {info['player_count']}")
     print(f"帕鲁数量: {info['pal_count']}")
     print(f"公会数量: {info['guild_count']}")
-
     print("\n✅ 存档读取正常！")
 
 
