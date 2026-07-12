@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from backend.parsers import extract_save_info
+from backend.parsers import extract_players, extract_save_info
 from backend.save_reader import load_sav
 
 
@@ -27,6 +27,15 @@ def main():
     print(f"玩家数量: {info['player_count']}")
     print(f"帕鲁数量: {info['pal_count']}")
     print(f"公会数量: {info['guild_count']}")
+
+    players = extract_players(data)
+    if players:
+        print(f"\n=== 玩家列表 ===")
+        for p in players[:10]:
+            print(f"  {p['nickname']} (Lv.{p['level']}) HP:{p['hp']}")
+        if len(players) > 10:
+            print(f"  ... 还有 {len(players) - 10} 个玩家")
+
     print("\n✅ 存档读取正常！")
 
 

@@ -24,6 +24,31 @@ def extract_save_info(data: dict) -> dict:
     }
 
 
+def extract_players(data: dict) -> list[dict]:
+    """提取所有玩家列表。"""
+    world_data = data.get("properties", {}).get("worldSaveData", {}).get("value", {})
+    character_map = world_data.get("CharacterSaveParameterMap", {}).get("value", [])
+
+    players = []
+    for entry in character_map:
+        obj = _get_save_parameter(entry)
+        if not obj or not _is_player(entry):
+            continue
+
+        key = entry.get("key", {})
+        players.append({
+            "instance_id": _safe_get(key, "value", "InstanceId", "value"),
+            "uid": _safe_get(key, "value", "PlayerUId", "value"),
+            "nickname": _safe_get(obj, "NickName", "value", default=""),
+            "level": _safe_get(obj, "Level", "value", default=1),
+            "hp": _extract_hp(obj),
+            "tech_points": _safe_get(obj, "TechnologyPoint", "value", default=0),
+            "ancient_tech_points": _safe_get(obj, "bossTechnologyPoint", "value", default=0),
+        })
+
+    return players
+
+
 def extract_pals(data: dict) -> list[dict]:
     """提取所有帕鲁列表。"""
     world_data = data.get("properties", {}).get("worldSaveData", {}).get("value", {})
