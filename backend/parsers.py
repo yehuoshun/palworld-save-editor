@@ -49,6 +49,54 @@ def extract_players(data: dict) -> list[dict]:
     return players
 
 
+def extract_pal_detail(data: dict, instance_id: str) -> dict | None:
+    """提取单个帕鲁的完整详情。"""
+    world_data = data.get("properties", {}).get("worldSaveData", {}).get("value", {})
+    character_map = world_data.get("CharacterSaveParameterMap", {}).get("value", [])
+
+    for entry in character_map:
+        key = entry.get("key", {})
+        sid = _safe_get(key, "value", "InstanceId", "value")
+        if str(sid) != str(instance_id):
+            continue
+
+        obj = _get_save_parameter(entry)
+        if not obj:
+            return None
+
+        return {
+            "instance_id": sid,
+            "character_id": _safe_get(obj, "CharacterID", "value"),
+            "nickname": _safe_get(obj, "NickName", "value", default=""),
+            "level": _safe_get(obj, "Level", "value", default=1),
+            "exp": _safe_get(obj, "Exp", "value", default=0),
+            "gender": _safe_get(obj, "Gender", "value", default="Unknown"),
+            "is_boss": _safe_get(obj, "IsBoss", "value", default=False),
+            "is_lucky": _safe_get(obj, "IsLucky", "value", default=False),
+            "is_tower": _safe_get(obj, "IsTower", "value", default=False),
+            "hp": _extract_hp(obj),
+            "max_hp": _safe_get(obj, "MaxHP", "value", default=0),
+            "stomach": _safe_get(obj, "Stomach", "value", default=0.0),
+            "sanity": _safe_get(obj, "SanityValue", "value", default=0.0),
+            "rank": _safe_get(obj, "Rank", "value", default=0),
+            "talent_hp": _safe_get(obj, "Talent_HP", "value", default=0),
+            "talent_attack": _safe_get(obj, "Talent_Shot", "value", default=0),
+            "talent_defense": _safe_get(obj, "Talent_Defense", "value", default=0),
+            "rank_hp": _safe_get(obj, "Rank_HP", "value", default=0),
+            "rank_attack": _safe_get(obj, "Rank_Attack", "value", default=0),
+            "rank_defense": _safe_get(obj, "Rank_Defense", "value", default=0),
+            "rank_craftspeed": _safe_get(obj, "Rank_CraftSpeed", "value", default=0),
+            "active_skills": _extract_list(obj, "EquipWaza"),
+            "learned_skills": _extract_list(obj, "MasteredWaza"),
+            "passive_skills": _extract_list(obj, "PassiveSkillList"),
+            "work_suitability": _extract_work_suitability(obj),
+            "owner_uid": _safe_get(obj, "OwnerPlayerUId", "value"),
+            "friendship": _safe_get(obj, "FriendShipPoint", "value", default=0),
+        }
+
+    return None
+
+
 def extract_pals(data: dict) -> list[dict]:
     """提取所有帕鲁列表。"""
     world_data = data.get("properties", {}).get("worldSaveData", {}).get("value", {})
@@ -105,6 +153,42 @@ def _extract_hp(obj: dict) -> int:
     if isinstance(hp, dict):
         hp = hp.get("value", 0)
     return hp if isinstance(hp, (int, float)) else 0
+
+
+def _extract_list(obj: dict, key: str) -> list:
+    """提取嵌套列表字段。"""
+    val = obj.get(key, {})
+    if isinstance(val, dict):
+        val = val.get("value", val)
+    if isinstance(val, dict):
+        val = val.get("values", val)
+    if isinstance(val, list):
+        return [v.get("value", v) if isinstance(v, dict) else v for v in val]
+    return []
+
+
+def _extract_work_suitability(obj: dict) -> dict:
+    """提取工作适应性。"""
+    ranks = obj.get("GotWorkSuitabilityAddRankList", {})
+    if isinstance(ranks, dict):
+        ranks = ranks.get("value", ranks)
+    if isinstance(ranks, dict):
+        ranks = ranks.get("values", ranks)
+    if not isinstance(ranks, list):
+        return {}
+
+    result = {}
+    for entry in ranks:
+        if not isinstance(entry, dict):
+            continue
+        ws = entry.get("WorkSuitability", {})
+        if isinstance(ws, dict):
+            ws = ws.get("value", ws)
+        rank = entry.get("Rank", {})
+        if isinstance(rank, dict):
+            rank = rank.get("value", 0)
+        result[str(ws)] = int(rank) if rank else 0
+    return result
 
 
 def _safe_get(d: dict, *keys, default=None):

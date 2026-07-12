@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from backend.parsers import extract_players, extract_save_info
+from backend.parsers import extract_pal_detail, extract_pals, extract_players, extract_save_info
 from backend.save_reader import load_sav
 
 
@@ -35,6 +35,23 @@ def main():
             print(f"  {p['nickname']} (Lv.{p['level']}) HP:{p['hp']}")
         if len(players) > 10:
             print(f"  ... 还有 {len(players) - 10} 个玩家")
+
+    # 测试帕鲁详情
+    pals = extract_pals(data)
+    if pals:
+        first = pals[0]
+        detail = extract_pal_detail(data, str(first["instance_id"]))
+        if detail:
+            print(f"\n=== 帕鲁详情示例 ===")
+            print(f"  名称: {detail['nickname']} ({detail['character_id']})")
+            print(f"  等级: {detail['level']}  性别: {detail['gender']}")
+            print(f"  HP: {detail['hp']}/{detail['max_hp']}")
+            print(f"  天赋: HP+{detail['talent_hp']} 攻+{detail['talent_attack']} 防+{detail['talent_defense']}")
+            print(f"  强化: HP+{detail['rank_hp']} 攻+{detail['rank_attack']} 防+{detail['rank_defense']}")
+            print(f"  星级: {detail['rank']}  亲密度: {detail['friendship']}")
+            print(f"  主动技能: {len(detail['active_skills'])} 个")
+            print(f"  被动技能: {len(detail['passive_skills'])} 个")
+            print(f"  工作适应: {detail['work_suitability']}")
 
     print("\n✅ 存档读取正常！")
 
